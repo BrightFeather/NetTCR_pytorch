@@ -160,13 +160,46 @@ def make_sequence_ds(df, encoding):
     encoded_b1 = enc_list_bl_max_len(df.B1, encoding, b1_max)/5
     encoded_b2 = enc_list_bl_max_len(df.B2, encoding, b2_max)/5
     encoded_b3 = enc_list_bl_max_len(df.B3, encoding, b3_max)/5
-    X = [np.float32(t) for t in [encoded_pep, encoded_a1, encoded_a2, encoded_a3, encoded_b1, encoded_b2, encoded_b3]]
-    X = [np.transpose(t, (0,2,1)) for t in X]
+    X = [np.transpose(np.float32(t), (0,2,1)) for t in [encoded_pep, encoded_a1, encoded_a2, encoded_a3, encoded_b1, encoded_b2, encoded_b3]]
+    # X = [np.transpose(np.float32(t), (0,2,1)) for t in X]
     targets = df.binder.values
-    sample_weights = df.sample_weight
+    if "sample_weight" in df.columns:
+        sample_weights = df.sample_weight
+    else:
+        sample_weights = np.ones(targets.shape)
     return X, np.float32(targets), np.float32(sample_weights)
 
-def my_roc_auc_function(y_true, y_pred):
+def make_sequence_ds_eval(df, encoding):
+    """Encodes amino acid sequences using a BLOSUM50 matrix with a normalization factor of 5.
+    Sequences are right-padded with [-1x20] for each AA missing, compared to the maximum embedding 
+    length for that given feature
+    
+    Additionally, the input is prepared for predictions, by loading the data into a list of numpy arrays"""
+    encoded_pep = enc_list_bl_max_len(df.peptide, encoding, pep_max)/5
+    encoded_a1 = enc_list_bl_max_len(df.A1, encoding, a1_max)/5
+    encoded_a2 = enc_list_bl_max_len(df.A2, encoding, a2_max)/5
+    encoded_a3 = enc_list_bl_max_len(df.A3, encoding, a3_max)/5
+    encoded_b1 = enc_list_bl_max_len(df.B1, encoding, b1_max)/5
+    encoded_b2 = enc_list_bl_max_len(df.B2, encoding, b2_max)/5
+    encoded_b3 = enc_list_bl_max_len(df.B3, encoding, b3_max)/5
+    X = {
+        "serving_default_pep:0": np.float32(encoded_pep),
+        "serving_default_a1:0": np.float32(encoded_a1),
+        "serving_default_a2:0": np.float32(encoded_a2),
+        "serving_default_a3:0": np.float32(encoded_a3),
+        "serving_default_b1:0": np.float32(encoded_b1),
+        "serving_default_b2:0": np.float32(encoded_b2),
+        "serving_default_b3:0": np.float32(encoded_b3),
+    }
+    # X = [np.transpose(np.float32(t), (0,2,1)) for t in X]
+    targets = df.binder.values
+    if "sample_weight" in df.columns:
+        sample_weights = df.sample_weight
+    else:
+        sample_weights = np.ones(targets.shape)
+    return X, np.float32(targets), np.float32(sample_weights)
+
+def roc_auc_function(y_true, y_pred):
     """Implementation of AUC 0.1 metric for Tensorflow"""
     try:
         auc = roc_auc_score(y_true, y_pred, max_fpr = 0.1)
@@ -177,5 +210,5 @@ def my_roc_auc_function(y_true, y_pred):
 #Custom metric for AUC 0.1
 # def auc_01(y_true, y_pred):
 #     """Converts function to optimised tensorflow numpy function"""
-#     auc_01 = tf.numpy_function(my_roc_auc_function, [y_true, y_pred], tf.float64)
+#     auc_01 = tf.numpy_function(my_roc_auc_function, [y_true, y_pred], torch.float64)
 #     return auc_01

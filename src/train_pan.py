@@ -21,8 +21,8 @@ from dataset import CustomDataset
 from utils import EarlyStopper, make_sequence_ds
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--train_data", default="../NetTCR-2.2/data/examples/train_example.csv", help = "Dataset used for training", type = str)
-parser.add_argument("--val_data", default="../NetTCR-2.2/data/examples/validation_example.csv", help = "Dataset used for validation", type = str)
+parser.add_argument("--train_data", default="../../NetTCR-2.2/data/examples/train_example.csv", help = "Dataset used for training", type = str)
+parser.add_argument("--val_data", default="../../NetTCR-2.2/data/examples/validation_example.csv", help = "Dataset used for validation", type = str)
 parser.add_argument("--outdir", default = "models", help = "Folder to save the model in", type = str)
 parser.add_argument("--model_name", default = "peptide_model", help = "Prefix of the saved model", type = str)
 parser.add_argument("--dropout_rate", "-dr", default = 0.6, help = "Fraction of concatenated max-pooling values set to 0. Used for preventing overfitting", type = float)
@@ -103,7 +103,7 @@ def train(train_data_dir, val_data_dir, outdir, model_name, dropout_rate, lr, pa
             optimizer.zero_grad()
             pred = model(data)
             target = target.to(torch.float32)
-            loss = loss_fn(pred, target.to(torch.float32))
+            loss = loss_fn(pred, target)
             weighted_loss = (loss * weight).mean()  # Apply sample weights
             weighted_loss.backward()
             optimizer.step()
@@ -122,6 +122,7 @@ def train(train_data_dir, val_data_dir, outdir, model_name, dropout_rate, lr, pa
                 weight = weight.to(device)
 
                 pred = model(data)
+                target = target.to(torch.float32)
                 loss = loss_fn(pred, target)
                 val_loss += loss.item()
 

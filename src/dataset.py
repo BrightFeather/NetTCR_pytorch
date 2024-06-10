@@ -2,12 +2,13 @@ from torch.utils.data import Dataset
 import pandas as pd
 import numpy as np
 
-from utils import make_sequence_ds
+from utils import make_sequence_ds, make_sequence_ds_eval
 
 class CustomDataset(Dataset):
-    def __init__(self, dir, encoding):
+    def __init__(self, dir, encoding, isEval=False):
         self.df = pd.read_csv(dir)
         self.encoding = encoding
+        self.isEval = isEval
         self.__validate__()
 
         # calculate sample weight
@@ -27,5 +28,9 @@ class CustomDataset(Dataset):
         return len(self.df)
 
     def __getitem__(self, idx):
-        X, y, weights = make_sequence_ds(self.df, encoding = self.encoding) # X_train, targets_train, weights_train
-        return [xx[idx,:,:] for xx in X], y[idx], weights[idx]
+        if not self.isEval:
+            X, y, weights = make_sequence_ds(self.df, encoding = self.encoding) # X_train, targets_train, weights_train
+            return [xx[idx,:,:] for xx in X], y[idx], weights[idx]
+        else:
+            X, y, weights = make_sequence_ds_eval(self.df, encoding = self.encoding) # X_train, targets_train, weights_train
+            return {k: v[idx] for k, v in X.items()}, y[idx], weights[idx]
