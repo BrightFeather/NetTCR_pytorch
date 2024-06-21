@@ -91,7 +91,7 @@ def eval(test_data, outdir, model_name, model_type, seed=15, batch_size=64):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--test_data", help = "Dataset to perform the predictions on", type = str)
+    parser.add_argument("--test_data", defaukt = "data/examples/train_example.csv", help = "Dataset to perform the predictions on", type = str)
     parser.add_argument("--outdir", default = "data/eval", help = "Folder where the models are stored. The prediction file is saved to this location", type = str)
     parser.add_argument("--model_name", default = "pan", help = "Prefix for the saved models. This prefix is also used for the prediction file", type = str)
     parser.add_argument("--model_type", default = "pan", help = "Type of NetTCR 2.2 model", choices = ["pan", "peptide", "pretrained"], type = str)
@@ -106,9 +106,6 @@ if __name__ == "__main__":
     model_name = str(args.model_name)
     model_type = str(args.model_type)
     seed = int(args.seed)
-
-    # for debug
-    # test_data = "/Users/chenweijia/Documents/code/nettcr_pytorch/data/train_example.csv"
 
     if model_type == "pan":
         eval(test_data, outdir, model_name, model_type, seed=15, batch_size=64)
